@@ -1,0 +1,247 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>محطات ترام دبي</title>
+<style>
+  :root {
+    --bg: #f3f3f3; --text: #333;
+    --box: #e6f0ff; --button: #0077cc; --btn-hover: #005fa3;
+  }
+  [data-theme="dark"] {
+    --bg: #121212; --text: #eaeaea;
+    --box: #1e1e1e; --button: #3399ff; --btn-hover: #267acc;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: Arial, sans-serif; margin:0; padding:0;
+    transition: background .3s, color .3s;
+  }
+  .top-bar {
+    position:fixed; top:0; left:0; right:0;
+    background: var(--box); padding:10px 15px;
+    display:flex; justify-content:space-between; align-items:center;
+    box-shadow:0 2px 4px rgba(0,0,0,0.1);
+  }
+  h1 { margin:0; font-size:1.2em; color: #004080; }
+  .toggle-switch {
+    display:flex; align-items:center;
+  }
+  .toggle-switch input {
+    opacity: 0; width: 0; height: 0;
+  }
+  .slider {
+    position: relative; width: 50px; height: 24px;
+    background: #ccc; border-radius: 34px; cursor: pointer;
+    transition: background .3s;
+  }
+  .slider::before {
+    content: ""; position: absolute; left: 4px; top: 4px;
+    width: 16px; height: 16px; background: white;
+    border-radius: 50%; transition: transform .3s;
+  }
+  input:checked + .slider {
+    background: var(--button);
+  }
+  input:checked + .slider::before {
+    transform: translateX(26px);
+  }
+  main {
+    padding: 80px 20px 20px;
+    text-align: center;
+  }
+  select, textarea, button, input[type="password"] {
+    width: 90%; max-width: 500px;
+    margin: 10px auto; padding:10px;
+    font-size:1em; display:block;
+  }
+  textarea {
+    height:180px; resize:none;
+    background:var(--box); color:var(--text);
+    text-align:right; direction:rtl;
+  }
+  button {
+    background:var(--button); color:white;
+    border:none; cursor:pointer;
+  }
+  button:hover { background:var(--btn-hover); }
+  footer {
+    margin-top:40px; color:#777; font-size:.9em;
+    padding-bottom:20px;
+  }
+  #app, #login { display:none; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>محطات ترام دبي</h1>
+  <label class="toggle-switch">
+    <input type="checkbox" id="themeToggle">
+    <span class="slider"></span>
+  </label>
+</div>
+
+<div id="login">
+  <main>
+    <h2>أدخل الرمز السري</h2>
+    <input type="password" id="pw" placeholder="الرمز السري"/>
+    <button onclick="login()">دخول</button>
+  </main>
+</div>
+
+<div id="app">
+  <main>
+    <select id="sels" onchange="showInfo()">
+      <option disabled selected>اختر محطة</option>
+      <option value="JBR 1">أبراج شاطئ الجميرا 1</option>
+      <option value="JBR 2">أبراج شاطئ الجميرا 2</option>
+      <option value="JLT">أبراج بحيرات الجميرا</option>
+      <option value="Dubai Marina Mall">دبي مارينا مول</option>
+      <option value="Dubai Marina">مرسى دبي</option>
+      <option value="Marina Towers">أبراج المارينا</option>
+      <option value="Mina Seyahi">الميناء السياحي</option>
+      <option value="Media City">مدينة دبي للإعلام</option>
+      <option value="Palm Jumeirah">نخلة جميرا</option>
+      <option value="Knowledge Village">قرية المعرفة</option>
+      <option value="Al Sufouh">الصفوح</option>
+    </select>
+
+    <textarea id="info" readonly placeholder="سيتم عرض معلومات المحطة هنا..."></textarea>
+    <button onclick="openMap()">افتح في Google Maps</button>
+  </main>
+  <footer>تصميم تجريبي - برمجة علي محمد العمري 2025</footer>
+</div>
+
+<script>
+  const pwCorrect = "2025";
+  const stations = {
+    "JBR 1": {
+      name: "أبراج شاطئ الجميرا 1",
+      desc: "محطة تقع في بداية منطقة JBR، قريبة من الشاطئ والفنادق.",
+      coords: "25.079407,55.135731",
+      exchange: "–"
+    },
+    "JBR 2": {
+      name: "أبراج شاطئ الجميرا 2",
+      desc: "قريبة من منطقة التسوق والمطاعم في JBR Walk.",
+      coords: "25.076678,55.135819",
+      exchange: "–"
+    },
+    "JLT": {
+      name: "أبراج بحيرات الجميرا",
+      desc: "محطة تبادل مع مترو دبي، تخدم منطقة أبراج بحيرات الجميرا.",
+      coords: "25.073618,55.139735",
+      exchange: "مترو دبي الخط الأحمر"
+    },
+    "Dubai Marina Mall": {
+      name: "دبي مارينا مول",
+      desc: "تقع بجوار دبي مارينا مول، وتخدم الزوار والمتسوقين.",
+      coords: "25.074206,55.142426",
+      exchange: "–"
+    },
+    "Dubai Marina": {
+      name: "مرسى دبي",
+      desc: "محطة رئيسية قريبة من المترو، تخدم المرسى والمطاعم.",
+      coords: "25.074804,55.144487",
+      exchange: "مترو دبي الخط الأحمر"
+    },
+    "Marina Towers": {
+      name: "أبراج المارينا",
+      desc: "محطة تقع في شمال منطقة المارينا السكنية.",
+      coords: "25.079320,55.146723",
+      exchange: "–"
+    },
+    "Mina Seyahi": {
+      name: "الميناء السياحي",
+      desc: "قريبة من الفنادق والمراسي الفاخرة مثل Westin وLe Méridien.",
+      coords: "25.081947,55.148571",
+      exchange: "–"
+    },
+    "Media City": {
+      name: "مدينة دبي للإعلام",
+      desc: "تخدم الشركات الإعلامية والمكاتب الإدارية في المنطقة.",
+      coords: "25.085045,55.150281",
+      exchange: "–"
+    },
+    "Palm Jumeirah": {
+      name: "نخلة جميرا",
+      desc: "محطة تبادل مع مونوريل نخلة جميرا، تخدم النخلة ومداخلها.",
+      coords: "25.088007,55.152510",
+      exchange: "مونوريل نخلة جميرا"
+    },
+    "Knowledge Village": {
+      name: "قرية المعرفة",
+      desc: "قريبة من المؤسسات الأكاديمية والجامعات الدولية.",
+      coords: "25.091048,55.153593",
+      exchange: "–"
+    },
+    "Al Sufouh": {
+      name: "الصفوح",
+      desc: "المحطة النهائية للترام، تخدم منطقة الصفوح السكنية.",
+      coords: "25.094186,55.155281",
+      exchange: "–"
+    }
+  };
+
+  function themeInit(){
+    const t = localStorage.getItem("theme")
+      || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light");
+    document.documentElement.setAttribute("data-theme", t);
+    document.getElementById("themeToggle").checked = (t==="dark");
+  }
+
+  document.getElementById("themeToggle").addEventListener("change", e=>{
+    const t = e.target.checked ? "dark":"light";
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("theme", t);
+  });
+
+  function login(){
+    if(document.getElementById("pw").value === pwCorrect){
+      document.getElementById("login").style.display="none";
+      document.getElementById("app").style.display="block";
+      themeInit();
+      loadLast();
+    } else alert("رمز خاطئ!");
+  }
+
+  function showInfo(){
+    const sel = document.getElementById("sels").value;
+    const d = stations[sel];
+    if(d){
+      document.getElementById("info").value =
+        `📍 ${d.name}
+
+` +
+        `وصف: ${d.desc}
+` +
+        `إحداثيات: ${d.coords}
+` +
+        `تبادل: ${d.exchange}`;
+      localStorage.setItem("last", sel);
+    }
+  }
+
+  function openMap(){
+    const sel = document.getElementById("sels").value;
+    if(stations[sel]){
+      const [lat, lng] = stations[sel].coords.split(",");
+      window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+    } else alert("اختر محطة أولاً.");
+  }
+
+  function loadLast(){
+    const last = localStorage.getItem("last");
+    if(last && stations[last]){
+      document.getElementById("sels").value = last;
+      showInfo();
+    }
+  }
+
+  window.onload = ()=> document.getElementById("login").style.display="block";
+</script>
+</body>
+</html>
